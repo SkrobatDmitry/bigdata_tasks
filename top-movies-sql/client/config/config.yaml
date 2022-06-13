@@ -1,0 +1,14 @@
+csv:
+  head: genre,title,year,rating
+  delimiter: ','
+
+memory:
+  batch_size: 1000
+  memory_limit: 16384 # Bytes
+
+default:
+  n: 0
+  year_from: 0
+  year_to: 10000
+  regexp: ''
+  genres: Action|Adventure|Animation|Children|Comedy|Crime|Documentary|Drama|Fantasy|Film-Noir|Horror|IMAX|Musical|Mystery|Romance|Sci-Fi|Thriller|War|Western

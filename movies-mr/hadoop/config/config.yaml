@@ -1,0 +1,7 @@
+local:
+  dataset_folder: "dataset"
+
+hadoop:
+  folder: "/movies-mr"
+  dataset_folder: "/movies-mr/dataset"
+  output_foler: "/movies-mr/output"

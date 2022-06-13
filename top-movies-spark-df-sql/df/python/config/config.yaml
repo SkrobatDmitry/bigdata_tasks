@@ -1,0 +1,6 @@
+dataset: "ml-latest-small"
+local_dataset_path: "dataset"
+
+hdfs_path: "/top-movies-spark-df"
+hdfs_dataset_path: "/top-movies-spark-df/dataset"
+hdfs_output_path: "/top-movies-spark-df/output"

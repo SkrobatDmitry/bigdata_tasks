@@ -1,0 +1,13 @@
+database:
+  user: "root"
+  password: "root"
+  host: "127.0.0.1"
+  port: "3306"
+  db: "target_db"
+
+sql:
+  databases: "sql/ddl/databases"
+  tables: "sql/ddl/tables/target_database"
+  population_scripts: "sql/dml/population_scripts/target_database"
+  functions: "sql/ddl/functions/target_database"
+  procedures: "sql/ddl/procedures/target_database"

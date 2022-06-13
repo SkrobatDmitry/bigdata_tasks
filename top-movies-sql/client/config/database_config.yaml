@@ -1,0 +1,9 @@
+database:
+  user: root
+  password: root
+  host: 127.0.0.1
+  port: 3306
+  db: target_db
+
+stored_procedure:
+  get_movies: usp_get_movies

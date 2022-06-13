@@ -1,0 +1,11 @@
+database:
+  user: "root"
+  password: "root"
+  host: "127.0.0.1"
+  port: "3306"
+  db: "landing_db"
+
+sql:
+  databases: "sql/ddl/databases"
+  tables: "sql/ddl/tables/landing_database"
+  population_scripts: "sql/dml/population_scripts/landing_database"

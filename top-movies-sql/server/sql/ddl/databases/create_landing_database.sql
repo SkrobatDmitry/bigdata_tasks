@@ -1,0 +1,2 @@
+DROP DATABASE IF EXISTS landing_db;
+CREATE DATABASE landing_db;

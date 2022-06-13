@@ -1,0 +1,610 @@
+﻿{
+  "paragraphs": [
+    {
+      "title": "Setup environment",
+      "text": "%sh\n\nfunction load_dataset() {\n  wget -q https://files.grouplens.org/datasets/movielens/$1.zip\n  unzip -u -q $1.zip $1/movies.csv $1/ratings.csv\n\n  if [ -d dataset ]; then\n    rm -r dataset\n  fi\n\n  mv $1 dataset\n  rm $1.zip\n}\n\ndataset=\"ml-latest-small\"\nhadoop_path=\"/top-movies-spark-df\"\n\nload_dataset $dataset\n\nhdfs dfs -test -d $hadoop_path\nif [ $? -eq 0 ]; then\n  hdfs dfs -rm -r $hadoop_path &>/dev/null\nfi\n\nhdfs dfs -mkdir $hadoop_path\nhdfs dfs -put dataset $hadoop_path",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-27T10:38:05+0000",
+      "config": {
+        "colWidth": 6,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "sh",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": false
+        },
+        "editorMode": "ace/mode/sh",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650908210635_287985046",
+      "id": "paragraph_1650908210635_287985046",
+      "dateCreated": "2022-04-25T17:36:50+0000",
+      "dateStarted": "2022-04-27T10:38:05+0000",
+      "dateFinished": "2022-04-27T10:38:15+0000",
+      "status": "FINISHED",
+      "focus": true,
+      "$$hashKey": "object:5748"
+    },
+    {
+      "title": "Import",
+      "text": "%pyspark\n\nimport sys\nimport re\nfrom pyspark.sql import Window, dataframe\nfrom pyspark.sql.functions import udf, explode, split, lit, round, mean, row_number\nfrom pyspark.sql.types import IntegerType, StringType, BooleanType",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-27T10:38:15+0000",
+      "config": {
+        "colWidth": 6,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1651018704393_581020795",
+      "id": "paragraph_1651018704393_581020795",
+      "dateCreated": "2022-04-27T00:18:24+0000",
+      "dateStarted": "2022-04-27T10:38:15+0000",
+      "dateFinished": "2022-04-27T10:38:15+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:5749"
+    },
+    {
+      "title": "Initialization",
+      "text": "%pyspark\n\ndataset_path = '/top-movies-spark-df/dataset'\noutput_path = '/top-movies-spark-df/output'\n\nargs = {\n    'N': None,\n    'regexp': '',\n    'year_from': 0,\n    'year_to': 10000,\n    'genres': None\n}",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-27T10:38:16+0000",
+      "config": {
+        "colWidth": 6,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1651018602170_247633899",
+      "id": "paragraph_1651018602170_247633899",
+      "dateCreated": "2022-04-27T00:16:42+0000",
+      "dateStarted": "2022-04-27T10:38:16+0000",
+      "dateFinished": "2022-04-27T10:38:16+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:5750"
+    },
+    {
+      "title": "Get dataframe from csv file",
+      "text": "%pyspark\n\ndef get_csv_df(path: str, header: bool = True) -> dataframe:\n    try:\n        return spark.read.csv(path, header=header, inferSchema=True)\n    except Exception as e:\n        print(e, file=sys.stderr)\n        \n\nmovies_df = get_csv_df(f'{dataset_path}/movies.csv')\nratings_df = get_csv_df(f'{dataset_path}/ratings.csv')\n\nprint(movies_df.take(1))\nprint(ratings_df.take(1))",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-27T10:38:16+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "[Row(movieId=1, title='Toy Story (1995)', genres='Adventure|Animation|Children|Comedy|Fantasy')]\n[Row(userId=1, movieId=1, rating=4.0, timestamp=964982703)]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=69",
+              "$$hashKey": "object:8658"
+            },
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=70",
+              "$$hashKey": "object:8659"
+            },
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=71",
+              "$$hashKey": "object:8660"
+            },
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=72",
+              "$$hashKey": "object:8661"
+            },
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=73",
+              "$$hashKey": "object:8662"
+            },
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=74",
+              "$$hashKey": "object:8663"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1651018694455_1633332578",
+      "id": "paragraph_1651018694455_1633332578",
+      "dateCreated": "2022-04-27T00:18:14+0000",
+      "dateStarted": "2022-04-27T10:38:16+0000",
+      "dateFinished": "2022-04-27T10:38:17+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:5751"
+    },
+    {
+      "title": "Get title from raw title udf",
+      "text": "%pyspark\n\n@udf(StringType())\ndef get_title_from_title_udf(title: str):\n    movie_title = re.sub(r'[ ]\\((\\d{4})\\)$', '', title)\n    return movie_title",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-27T10:38:17+0000",
+      "config": {
+        "colWidth": 6,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1651018864962_316839897",
+      "id": "paragraph_1651018864962_316839897",
+      "dateCreated": "2022-04-27T00:21:04+0000",
+      "dateStarted": "2022-04-27T10:38:20+0000",
+      "dateFinished": "2022-04-27T10:38:20+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:5752"
+    },
+    {
+      "title": "Get year from raw title udf",
+      "text": "%pyspark\n\n@udf(IntegerType())\ndef get_year_from_title_udf(title: str):\n    try:\n        movie_year = re.findall(r'[ ]\\((\\d{4})\\)$', title)[0]\n        return int(movie_year)\n    except Exception as e:\n        return None",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-27T10:38:20+0000",
+      "config": {
+        "colWidth": 6,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1651053602763_557965702",
+      "id": "paragraph_1651053602763_557965702",
+      "dateCreated": "2022-04-27T10:00:02+0000",
+      "dateStarted": "2022-04-27T10:38:20+0000",
+      "dateFinished": "2022-04-27T10:38:20+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:5753"
+    },
+    {
+      "title": "Filter movie udf",
+      "text": "%pyspark\n\n@udf(BooleanType())\ndef match_movie_udf(m_title: str, m_year: int, m_genre: str, regexp: str, year_from: int, year_to: int, genres: str):\n\n    def match_title(title: str):\n        try:\n            return bool(re.search(regexp, title, re.IGNORECASE))\n        except Exception as e:\n            return False\n\n    def match_year(year: int):\n        try:\n            return year_from <= year <= year_to\n        except Exception as e:\n            return False\n\n    def match_genre(genre: str):\n        try:\n            return genre.lower() in genres.lower() if genres else genre != '(no genres listed)'\n        except Exception as e:\n            return False\n\n    return match_genre(m_genre) and match_title(m_title) and match_year(m_year)",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-27T10:38:20+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1651053733214_1418472000",
+      "id": "paragraph_1651053733214_1418472000",
+      "dateCreated": "2022-04-27T10:02:13+0000",
+      "dateStarted": "2022-04-27T10:38:20+0000",
+      "dateFinished": "2022-04-27T10:38:20+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:5754"
+    },
+    {
+      "title": "Map and filter movies dataframe",
+      "text": "%pyspark\n\ndef map_and_filter_movies_df(df: dataframe) -> dataframe:\n    lit_movie_args = [lit(v) for k, v in args.items() if k in ['regexp', 'year_from', 'year_to', 'genres']]\n\n    df = df.select(df['movieId'].alias('movie_id'), get_title_from_title_udf('title').alias('title'),\n                   get_year_from_title_udf('title').alias('year'), explode(split('genres', r'\\|')).alias('genre'))\n\n    return df.filter(match_movie_udf('title', 'year', 'genre', *lit_movie_args))\n    \n\nmapped_and_filtered_movies_df = map_and_filter_movies_df(movies_df)\nprint(mapped_and_filtered_movies_df.take(2))",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-27T10:38:21+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "[Row(movie_id=1, title='Toy Story', year=1995, genre='Adventure'), Row(movie_id=1, title='Toy Story', year=1995, genre='Animation')]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=75",
+              "$$hashKey": "object:8727"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1651053915487_287030569",
+      "id": "paragraph_1651053915487_287030569",
+      "dateCreated": "2022-04-27T10:05:15+0000",
+      "dateStarted": "2022-04-27T10:38:21+0000",
+      "dateFinished": "2022-04-27T10:38:21+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:5755"
+    },
+    {
+      "title": "Group and aggregate ratings dataframe",
+      "text": "%pyspark\n\ndef group_and_agg_ratings_df(df: dataframe) -> dataframe:\n    df = df.select(df['movieId'].alias('movie_id'), df['rating']).filter(df['rating'].isNotNull())\n    return df.groupBy('movie_id').agg(round(mean('rating'), 4).alias('rating'))\n    \n\ngrouped_and_agg_ratings_df = group_and_agg_ratings_df(ratings_df)\nprint(grouped_and_agg_ratings_df.take(2))",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-27T10:38:21+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "[Row(movie_id=1580, rating=3.4879), Row(movie_id=2366, rating=3.64)]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=76",
+              "$$hashKey": "object:8776"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1651054239218_1950180821",
+      "id": "paragraph_1651054239218_1950180821",
+      "dateCreated": "2022-04-27T10:10:39+0000",
+      "dateStarted": "2022-04-27T10:38:21+0000",
+      "dateFinished": "2022-04-27T10:38:21+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:5756"
+    },
+    {
+      "text": "%pyspark\n\ndef join_and_filter_dfs(movies_df: dataframe, ratings_df: dataframe) -> dataframe:\n    df = movies_df.join(ratings_df, movies_df['movie_id'] == ratings_df['movie_id'], 'inner')\n    df = df.select(movies_df['genre'], movies_df['title'], movies_df['year'], ratings_df['rating']) \\\n        .withColumn('row_number', row_number().over(Window.partitionBy('genre').orderBy(ratings_df['rating'].desc(), movies_df['year'].desc(), movies_df['title'].asc())))\n    \n    if args['N']:\n        df = df.filter(df.row_number <= args['N'])\n\n    return df.sort(df['genre'], df['row_number']).select(df['genre'], df['title'], df['year'], df['rating'])\n    \n\nmovies_ratings_df = join_and_filter_dfs(mapped_and_filtered_movies_df, grouped_and_agg_ratings_df)\nprint(movies_ratings_df.take(2))",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-27T10:38:21+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=77",
+              "$$hashKey": "object:8840"
+            },
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=78",
+              "$$hashKey": "object:8841"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1651054949692_479932863",
+      "id": "paragraph_1651054949692_479932863",
+      "dateCreated": "2022-04-27T10:22:29+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:5757",
+      "dateFinished": "2022-04-27T10:38:37+0000",
+      "dateStarted": "2022-04-27T10:38:34+0000",
+      "title": "Join and filter movies and ratings dataframes",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "[Row(genre='Action', title='Tokyo Tribe', year=2014, rating=5.0), Row(genre='Action', title=\"On the Other Side of the Tracks (De l'autre côté du périph)\", year=2012, rating=5.0)]\n"
+          }
+        ]
+      }
+    },
+    {
+      "text": "%pyspark\n\nmovies_ratings_df.write.csv(output_path, encoding='utf-8', header=True)",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-27T10:38:58+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "scala",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/scala",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=79",
+              "$$hashKey": "object:8995"
+            },
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=80",
+              "$$hashKey": "object:8996"
+            },
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=81",
+              "$$hashKey": "object:8997"
+            },
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:34829/jobs/job?id=82",
+              "$$hashKey": "object:8998"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1651055421377_1375083837",
+      "id": "paragraph_1651055421377_1375083837",
+      "dateCreated": "2022-04-27T10:30:21+0000",
+      "status": "FINISHED",
+      "focus": true,
+      "$$hashKey": "object:6608",
+      "dateFinished": "2022-04-27T10:38:45+0000",
+      "dateStarted": "2022-04-27T10:38:37+0000",
+      "title": "Save as file",
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      }
+    },
+    {
+      "text": "%sh\n\nhdfs dfs -ls /top-movies-spark-df/output",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-27T10:39:02+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "sh",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": false
+        },
+        "editorMode": "ace/mode/sh",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1651055709206_1571905121",
+      "id": "paragraph_1651055709206_1571905121",
+      "dateCreated": "2022-04-27T10:35:09+0000",
+      "status": "FINISHED",
+      "focus": true,
+      "$$hashKey": "object:7640",
+      "dateFinished": "2022-04-27T10:38:48+0000",
+      "dateStarted": "2022-04-27T10:38:45+0000",
+      "title": "Output file partitions",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "Found 201 items\n-rw-r--r--   2 zeppelin hadoop          0 2022-04-27 10:38 /top-movies-spark-df/output/_SUCCESS\n-rw-r--r--   2 zeppelin hadoop       5065 2022-04-27 10:38 /top-movies-spark-df/output/part-00000-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5329 2022-04-27 10:38 /top-movies-spark-df/output/part-00001-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4575 2022-04-27 10:38 /top-movies-spark-df/output/part-00002-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4565 2022-04-27 10:38 /top-movies-spark-df/output/part-00003-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4358 2022-04-27 10:38 /top-movies-spark-df/output/part-00004-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4447 2022-04-27 10:38 /top-movies-spark-df/output/part-00005-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3920 2022-04-27 10:38 /top-movies-spark-df/output/part-00006-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4257 2022-04-27 10:38 /top-movies-spark-df/output/part-00007-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3962 2022-04-27 10:38 /top-movies-spark-df/output/part-00008-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3854 2022-04-27 10:38 /top-movies-spark-df/output/part-00009-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4261 2022-04-27 10:38 /top-movies-spark-df/output/part-00010-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3965 2022-04-27 10:38 /top-movies-spark-df/output/part-00011-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4218 2022-04-27 10:38 /top-movies-spark-df/output/part-00012-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4250 2022-04-27 10:38 /top-movies-spark-df/output/part-00013-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4111 2022-04-27 10:38 /top-movies-spark-df/output/part-00014-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4025 2022-04-27 10:38 /top-movies-spark-df/output/part-00015-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4158 2022-04-27 10:38 /top-movies-spark-df/output/part-00016-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5315 2022-04-27 10:38 /top-movies-spark-df/output/part-00017-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5863 2022-04-27 10:38 /top-movies-spark-df/output/part-00018-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5115 2022-04-27 10:38 /top-movies-spark-df/output/part-00019-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4674 2022-04-27 10:38 /top-movies-spark-df/output/part-00020-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4911 2022-04-27 10:38 /top-movies-spark-df/output/part-00021-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4766 2022-04-27 10:38 /top-movies-spark-df/output/part-00022-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4367 2022-04-27 10:38 /top-movies-spark-df/output/part-00023-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4581 2022-04-27 10:38 /top-movies-spark-df/output/part-00024-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4630 2022-04-27 10:38 /top-movies-spark-df/output/part-00025-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4785 2022-04-27 10:38 /top-movies-spark-df/output/part-00026-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4617 2022-04-27 10:38 /top-movies-spark-df/output/part-00027-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5270 2022-04-27 10:38 /top-movies-spark-df/output/part-00028-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5888 2022-04-27 10:38 /top-movies-spark-df/output/part-00029-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5153 2022-04-27 10:38 /top-movies-spark-df/output/part-00030-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4863 2022-04-27 10:38 /top-movies-spark-df/output/part-00031-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5007 2022-04-27 10:38 /top-movies-spark-df/output/part-00032-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5118 2022-04-27 10:38 /top-movies-spark-df/output/part-00033-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4556 2022-04-27 10:38 /top-movies-spark-df/output/part-00034-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4714 2022-04-27 10:38 /top-movies-spark-df/output/part-00035-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4309 2022-04-27 10:38 /top-movies-spark-df/output/part-00036-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4400 2022-04-27 10:38 /top-movies-spark-df/output/part-00037-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4674 2022-04-27 10:38 /top-movies-spark-df/output/part-00038-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4292 2022-04-27 10:38 /top-movies-spark-df/output/part-00039-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4428 2022-04-27 10:38 /top-movies-spark-df/output/part-00040-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4437 2022-04-27 10:38 /top-movies-spark-df/output/part-00041-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4599 2022-04-27 10:38 /top-movies-spark-df/output/part-00042-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4345 2022-04-27 10:38 /top-movies-spark-df/output/part-00043-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4166 2022-04-27 10:38 /top-movies-spark-df/output/part-00044-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5077 2022-04-27 10:38 /top-movies-spark-df/output/part-00045-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4299 2022-04-27 10:38 /top-movies-spark-df/output/part-00046-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4259 2022-04-27 10:38 /top-movies-spark-df/output/part-00047-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4482 2022-04-27 10:38 /top-movies-spark-df/output/part-00048-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4205 2022-04-27 10:38 /top-movies-spark-df/output/part-00049-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4334 2022-04-27 10:38 /top-movies-spark-df/output/part-00050-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3873 2022-04-27 10:38 /top-movies-spark-df/output/part-00051-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4071 2022-04-27 10:38 /top-movies-spark-df/output/part-00052-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4174 2022-04-27 10:38 /top-movies-spark-df/output/part-00053-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4176 2022-04-27 10:38 /top-movies-spark-df/output/part-00054-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4157 2022-04-27 10:38 /top-movies-spark-df/output/part-00055-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3814 2022-04-27 10:38 /top-movies-spark-df/output/part-00056-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4009 2022-04-27 10:38 /top-movies-spark-df/output/part-00057-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4082 2022-04-27 10:38 /top-movies-spark-df/output/part-00058-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3957 2022-04-27 10:38 /top-movies-spark-df/output/part-00059-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4124 2022-04-27 10:38 /top-movies-spark-df/output/part-00060-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4019 2022-04-27 10:38 /top-movies-spark-df/output/part-00061-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4243 2022-04-27 10:38 /top-movies-spark-df/output/part-00062-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3965 2022-04-27 10:38 /top-movies-spark-df/output/part-00063-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4160 2022-04-27 10:38 /top-movies-spark-df/output/part-00064-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3905 2022-04-27 10:38 /top-movies-spark-df/output/part-00065-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3612 2022-04-27 10:38 /top-movies-spark-df/output/part-00066-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4418 2022-04-27 10:38 /top-movies-spark-df/output/part-00067-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4287 2022-04-27 10:38 /top-movies-spark-df/output/part-00068-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3772 2022-04-27 10:38 /top-movies-spark-df/output/part-00069-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3839 2022-04-27 10:38 /top-movies-spark-df/output/part-00070-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3954 2022-04-27 10:38 /top-movies-spark-df/output/part-00071-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3980 2022-04-27 10:38 /top-movies-spark-df/output/part-00072-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4660 2022-04-27 10:38 /top-movies-spark-df/output/part-00073-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4294 2022-04-27 10:38 /top-movies-spark-df/output/part-00074-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4255 2022-04-27 10:38 /top-movies-spark-df/output/part-00075-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4071 2022-04-27 10:38 /top-movies-spark-df/output/part-00076-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3759 2022-04-27 10:38 /top-movies-spark-df/output/part-00077-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3819 2022-04-27 10:38 /top-movies-spark-df/output/part-00078-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3959 2022-04-27 10:38 /top-movies-spark-df/output/part-00079-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3679 2022-04-27 10:38 /top-movies-spark-df/output/part-00080-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3699 2022-04-27 10:38 /top-movies-spark-df/output/part-00081-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4027 2022-04-27 10:38 /top-movies-spark-df/output/part-00082-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3694 2022-04-27 10:38 /top-movies-spark-df/output/part-00083-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4330 2022-04-27 10:38 /top-movies-spark-df/output/part-00084-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4960 2022-04-27 10:38 /top-movies-spark-df/output/part-00085-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5077 2022-04-27 10:38 /top-movies-spark-df/output/part-00086-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5004 2022-04-27 10:38 /top-movies-spark-df/output/part-00087-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4096 2022-04-27 10:38 /top-movies-spark-df/output/part-00088-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4552 2022-04-27 10:38 /top-movies-spark-df/output/part-00089-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4296 2022-04-27 10:38 /top-movies-spark-df/output/part-00090-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4874 2022-04-27 10:38 /top-movies-spark-df/output/part-00091-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4366 2022-04-27 10:38 /top-movies-spark-df/output/part-00092-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4478 2022-04-27 10:38 /top-movies-spark-df/output/part-00093-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3598 2022-04-27 10:38 /top-movies-spark-df/output/part-00094-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4236 2022-04-27 10:38 /top-movies-spark-df/output/part-00095-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4099 2022-04-27 10:38 /top-movies-spark-df/output/part-00096-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4201 2022-04-27 10:38 /top-movies-spark-df/output/part-00097-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4380 2022-04-27 10:38 /top-movies-spark-df/output/part-00098-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4042 2022-04-27 10:38 /top-movies-spark-df/output/part-00099-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3913 2022-04-27 10:38 /top-movies-spark-df/output/part-00100-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4070 2022-04-27 10:38 /top-movies-spark-df/output/part-00101-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3898 2022-04-27 10:38 /top-movies-spark-df/output/part-00102-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4182 2022-04-27 10:38 /top-movies-spark-df/output/part-00103-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4007 2022-04-27 10:38 /top-movies-spark-df/output/part-00104-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4083 2022-04-27 10:38 /top-movies-spark-df/output/part-00105-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3861 2022-04-27 10:38 /top-movies-spark-df/output/part-00106-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3682 2022-04-27 10:38 /top-movies-spark-df/output/part-00107-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3615 2022-04-27 10:38 /top-movies-spark-df/output/part-00108-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3662 2022-04-27 10:38 /top-movies-spark-df/output/part-00109-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4286 2022-04-27 10:38 /top-movies-spark-df/output/part-00110-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3980 2022-04-27 10:38 /top-movies-spark-df/output/part-00111-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3789 2022-04-27 10:38 /top-movies-spark-df/output/part-00112-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3518 2022-04-27 10:38 /top-movies-spark-df/output/part-00113-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3902 2022-04-27 10:38 /top-movies-spark-df/output/part-00114-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4091 2022-04-27 10:38 /top-movies-spark-df/output/part-00115-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3757 2022-04-27 10:38 /top-movies-spark-df/output/part-00116-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3828 2022-04-27 10:38 /top-movies-spark-df/output/part-00117-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3709 2022-04-27 10:38 /top-movies-spark-df/output/part-00118-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3785 2022-04-27 10:38 /top-movies-spark-df/output/part-00119-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3864 2022-04-27 10:38 /top-movies-spark-df/output/part-00120-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3847 2022-04-27 10:38 /top-movies-spark-df/output/part-00121-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3519 2022-04-27 10:38 /top-movies-spark-df/output/part-00122-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3614 2022-04-27 10:38 /top-movies-spark-df/output/part-00123-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3759 2022-04-27 10:38 /top-movies-spark-df/output/part-00124-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3448 2022-04-27 10:38 /top-movies-spark-df/output/part-00125-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3580 2022-04-27 10:38 /top-movies-spark-df/output/part-00126-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3606 2022-04-27 10:38 /top-movies-spark-df/output/part-00127-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4786 2022-04-27 10:38 /top-movies-spark-df/output/part-00128-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5259 2022-04-27 10:38 /top-movies-spark-df/output/part-00129-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4361 2022-04-27 10:38 /top-movies-spark-df/output/part-00130-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4192 2022-04-27 10:38 /top-movies-spark-df/output/part-00131-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4119 2022-04-27 10:38 /top-movies-spark-df/output/part-00132-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4272 2022-04-27 10:38 /top-movies-spark-df/output/part-00133-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4229 2022-04-27 10:38 /top-movies-spark-df/output/part-00134-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4259 2022-04-27 10:38 /top-movies-spark-df/output/part-00135-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3833 2022-04-27 10:38 /top-movies-spark-df/output/part-00136-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4427 2022-04-27 10:38 /top-movies-spark-df/output/part-00137-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3592 2022-04-27 10:38 /top-movies-spark-df/output/part-00138-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3851 2022-04-27 10:38 /top-movies-spark-df/output/part-00139-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4010 2022-04-27 10:38 /top-movies-spark-df/output/part-00140-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3937 2022-04-27 10:38 /top-movies-spark-df/output/part-00141-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3978 2022-04-27 10:38 /top-movies-spark-df/output/part-00142-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4063 2022-04-27 10:38 /top-movies-spark-df/output/part-00143-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4074 2022-04-27 10:38 /top-movies-spark-df/output/part-00144-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4139 2022-04-27 10:38 /top-movies-spark-df/output/part-00145-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4043 2022-04-27 10:38 /top-movies-spark-df/output/part-00146-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4229 2022-04-27 10:38 /top-movies-spark-df/output/part-00147-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4064 2022-04-27 10:38 /top-movies-spark-df/output/part-00148-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4409 2022-04-27 10:38 /top-movies-spark-df/output/part-00149-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4546 2022-04-27 10:38 /top-movies-spark-df/output/part-00150-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4104 2022-04-27 10:38 /top-movies-spark-df/output/part-00151-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4169 2022-04-27 10:38 /top-movies-spark-df/output/part-00152-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4138 2022-04-27 10:38 /top-movies-spark-df/output/part-00153-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3863 2022-04-27 10:38 /top-movies-spark-df/output/part-00154-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       5051 2022-04-27 10:38 /top-movies-spark-df/output/part-00155-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4548 2022-04-27 10:38 /top-movies-spark-df/output/part-00156-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4598 2022-04-27 10:38 /top-movies-spark-df/output/part-00157-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4532 2022-04-27 10:38 /top-movies-spark-df/output/part-00158-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4298 2022-04-27 10:38 /top-movies-spark-df/output/part-00159-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4016 2022-04-27 10:38 /top-movies-spark-df/output/part-00160-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3740 2022-04-27 10:38 /top-movies-spark-df/output/part-00161-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4160 2022-04-27 10:38 /top-movies-spark-df/output/part-00162-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3935 2022-04-27 10:38 /top-movies-spark-df/output/part-00163-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4166 2022-04-27 10:38 /top-movies-spark-df/output/part-00164-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3729 2022-04-27 10:38 /top-movies-spark-df/output/part-00165-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3970 2022-04-27 10:38 /top-movies-spark-df/output/part-00166-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4150 2022-04-27 10:38 /top-movies-spark-df/output/part-00167-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4088 2022-04-27 10:38 /top-movies-spark-df/output/part-00168-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4336 2022-04-27 10:38 /top-movies-spark-df/output/part-00169-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4670 2022-04-27 10:38 /top-movies-spark-df/output/part-00170-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3944 2022-04-27 10:38 /top-movies-spark-df/output/part-00171-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4163 2022-04-27 10:38 /top-movies-spark-df/output/part-00172-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4477 2022-04-27 10:38 /top-movies-spark-df/output/part-00173-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4595 2022-04-27 10:38 /top-movies-spark-df/output/part-00174-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3972 2022-04-27 10:38 /top-movies-spark-df/output/part-00175-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4258 2022-04-27 10:38 /top-movies-spark-df/output/part-00176-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4277 2022-04-27 10:38 /top-movies-spark-df/output/part-00177-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4712 2022-04-27 10:38 /top-movies-spark-df/output/part-00178-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4273 2022-04-27 10:38 /top-movies-spark-df/output/part-00179-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4500 2022-04-27 10:38 /top-movies-spark-df/output/part-00180-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4463 2022-04-27 10:38 /top-movies-spark-df/output/part-00181-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4159 2022-04-27 10:38 /top-movies-spark-df/output/part-00182-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3630 2022-04-27 10:38 /top-movies-spark-df/output/part-00183-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4128 2022-04-27 10:38 /top-movies-spark-df/output/part-00184-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3806 2022-04-27 10:38 /top-movies-spark-df/output/part-00185-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3874 2022-04-27 10:38 /top-movies-spark-df/output/part-00186-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4304 2022-04-27 10:38 /top-movies-spark-df/output/part-00187-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3878 2022-04-27 10:38 /top-movies-spark-df/output/part-00188-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4198 2022-04-27 10:38 /top-movies-spark-df/output/part-00189-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3870 2022-04-27 10:38 /top-movies-spark-df/output/part-00190-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4008 2022-04-27 10:38 /top-movies-spark-df/output/part-00191-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3897 2022-04-27 10:38 /top-movies-spark-df/output/part-00192-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3827 2022-04-27 10:38 /top-movies-spark-df/output/part-00193-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4023 2022-04-27 10:38 /top-movies-spark-df/output/part-00194-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4245 2022-04-27 10:38 /top-movies-spark-df/output/part-00195-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4082 2022-04-27 10:38 /top-movies-spark-df/output/part-00196-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3815 2022-04-27 10:38 /top-movies-spark-df/output/part-00197-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       4089 2022-04-27 10:38 /top-movies-spark-df/output/part-00198-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n-rw-r--r--   2 zeppelin hadoop       3950 2022-04-27 10:38 /top-movies-spark-df/output/part-00199-6334d75f-891b-45d1-877d-0b339d114c44-c000.csv\n"
+          }
+        ]
+      }
+    }
+  ],
+  "name": "top-movies-spark-df",
+  "id": "2H2XBTGRW",
+  "defaultInterpreterGroup": "spark",
+  "version": "0.9.0-preview2",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": false,
+    "looknfeel": "default",
+    "personalizedMode": "false"
+  },
+  "info": {
+    "isRunning": false
+  },
+  "path": "/top-movies-spark-df"
+}

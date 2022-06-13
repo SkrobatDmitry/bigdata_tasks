@@ -1,0 +1,4 @@
+dataset: "ml-latest-small"
+local_dataset_path: "dataset"
+
+hadoop_path: "/top-movies-spark-sql"

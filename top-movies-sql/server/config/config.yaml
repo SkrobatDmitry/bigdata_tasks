@@ -1,0 +1,8 @@
+database_config:
+  landing: "config/databases/landing_config.yaml"
+  target: "config/databases/target_config.yaml"
+
+# Supports the following values:
+# ml-latest-small | ml-20m
+# ml-latest       | ml-25m
+dataset: "ml-latest-small"

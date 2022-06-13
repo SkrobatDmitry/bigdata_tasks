@@ -1,0 +1,784 @@
+﻿{
+  "paragraphs": [
+    {
+      "title": "Setup environment",
+      "text": "%sh\n\nfunction load_dataset() {\n  wget -q https://files.grouplens.org/datasets/movielens/$1.zip\n  unzip -u -q $1.zip $1/movies.csv $1/ratings.csv\n\n  if [ -d dataset ]; then\n    rm -r dataset\n  fi\n\n  mv $1 dataset\n  rm $1.zip\n}\n\ndataset=\"ml-latest-small\"\nhdfs_path=\"/top-movies-spark-core\"\n\nload_dataset $dataset\n\nhdfs dfs -test -d $hdfs_path\nif [ $? -eq 0 ]; then\n  hdfs dfs -rm -r $hdfs_path &>/dev/null\nfi\n\nhdfs dfs -mkdir $hdfs_path\nhdfs dfs -put dataset $hdfs_path",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:11+0000",
+      "config": {
+        "colWidth": 6,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "sh",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": false
+        },
+        "editorMode": "ace/mode/sh",
+        "title": true,
+        "lineNumbers": false
+      },
+      "settings": {
+        "params": {
+          "dataset": "ml-latest-small",
+          "hdfs_path": "/top-movies-spark-core"
+        },
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650907030756_1841335300",
+      "id": "paragraph_1650907030756_1841335300",
+      "dateCreated": "2022-04-25T17:17:10+0000",
+      "dateStarted": "2022-04-25T17:47:11+0000",
+      "dateFinished": "2022-04-25T17:47:21+0000",
+      "status": "FINISHED",
+      "focus": true,
+      "$$hashKey": "object:527"
+    },
+    {
+      "title": "Import",
+      "text": "%pyspark\n\nimport sys\nimport re\nfrom itertools import islice\nfrom pyspark import rdd",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:21+0000",
+      "config": {
+        "colWidth": 6,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true,
+        "tableHide": false,
+        "editorHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650901837901_1509321811",
+      "id": "paragraph_1650901837901_1509321811",
+      "dateCreated": "2022-04-25T15:50:37+0000",
+      "dateStarted": "2022-04-25T17:47:21+0000",
+      "dateFinished": "2022-04-25T17:47:21+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:528"
+    },
+    {
+      "title": "Initialization",
+      "text": "%pyspark\n\ndataset_path = \"/top-movies-spark-core/dataset\"\noutput_path = \"/top-movies-spark-core/output\"\n\nargs = {\n    'N': 3,\n    'regexp': '',\n    'year_from': 0,\n    'year_to': 10000,\n    'genres': None\n}",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:21+0000",
+      "config": {
+        "colWidth": 6,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true,
+        "tableHide": false,
+        "editorHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650901882354_601860039",
+      "id": "paragraph_1650901882354_601860039",
+      "dateCreated": "2022-04-25T15:51:22+0000",
+      "dateStarted": "2022-04-25T17:47:22+0000",
+      "dateFinished": "2022-04-25T17:47:22+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:529"
+    },
+    {
+      "title": "Load data",
+      "text": "%pyspark\r\n\r\ndef get_rdd_from_csv(path: str, is_header: bool = True) -> rdd:\r\n    try:\r\n        lnd_rdd = sc.textFile(path)\r\n        return lnd_rdd.mapPartitionsWithIndex(lambda i, it: islice(it, 1, None) if i == 0 else it) if is_header else lnd_rdd\r\n    except Exception as e:\r\n        print(e, file=sys.stderr)\r\n        \r\n\r\nraw_movies_rdd = get_rdd_from_csv(f'{dataset_path}/movies.csv')\r\nraw_ratings_rdd = get_rdd_from_csv(f'{dataset_path}/ratings.csv')\r\n\r\nprint(raw_movies_rdd.take(3))\r\nprint(raw_ratings_rdd.take(3))",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:22+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true,
+        "tableHide": false,
+        "editorHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "['1,Toy Story (1995),Adventure|Animation|Children|Comedy|Fantasy', '2,Jumanji (1995),Adventure|Children|Fantasy', '3,Grumpier Old Men (1995),Comedy|Romance']\n['1,1,4.0,964982703', '1,3,4.0,964981247', '1,6,4.0,964982224']\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=198",
+              "$$hashKey": "object:2755"
+            },
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=199",
+              "$$hashKey": "object:2756"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650901930993_76724383",
+      "id": "paragraph_1650901930993_76724383",
+      "dateCreated": "2022-04-25T15:52:10+0000",
+      "dateStarted": "2022-04-25T17:47:22+0000",
+      "dateFinished": "2022-04-25T17:47:22+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:530"
+    },
+    {
+      "title": "Normalize movie",
+      "text": "%pyspark\n\ndef get_movie_tuples(movie_line: str) -> list:\n        try:\n            movie_id, title, genres = re.split(',(?=(?:[^\\\"]*\\\"[^\\\"]*\\\")*[^\\\"]*$)', movie_line)\n            title = title[1:-1] if title.startswith('\"') and title.endswith('\"') else title\n\n            movie_title, movie_year = re.findall('(.*)[ ]\\((\\d{4})\\)$', title)[0]\n\n            return [(int(movie_id), (movie_title, int(movie_year), movie_genre)) for movie_genre in genres.split('|')]\n        except Exception:\n            return []\n            \n\npreprocessed_movies_rdd = raw_movies_rdd.flatMap(get_movie_tuples)\nprint(preprocessed_movies_rdd.take(3))",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:22+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true,
+        "tableHide": false,
+        "editorHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "[(1, ('Toy Story', 1995, 'Adventure')), (1, ('Toy Story', 1995, 'Animation')), (1, ('Toy Story', 1995, 'Children'))]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=200",
+              "$$hashKey": "object:2821"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650902584405_2080635428",
+      "id": "paragraph_1650902584405_2080635428",
+      "dateCreated": "2022-04-25T16:03:04+0000",
+      "dateStarted": "2022-04-25T17:47:22+0000",
+      "dateFinished": "2022-04-25T17:47:22+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:531"
+    },
+    {
+      "title": "Filter movie",
+      "text": "%pyspark\n\ndef match_genre(genre: str, genres: str) -> bool:\n    return genre.lower() in genres.lower() if genres else genre != '(no genres listed)'\n    \n    \ndef match_title(title: str, regexp: str) -> bool:\n    return bool(re.search(regexp, title, re.IGNORECASE))\n\n\ndef match_year(year: int, year_from: int, year_to: int) -> bool:\n    return year_from <= year <= year_to\n\n\ndef match_movie(movie_tuple: tuple) -> bool:\n    movie_id, movie = movie_tuple\n    movie_title, movie_year, movie_genre = movie\n    \n    return match_genre(movie_genre, args['genres']) and match_title(movie_title, args['regexp']) and match_year(movie_year, args['year_from'], args['year_to'])\n    \n\nmovies_rdd = preprocessed_movies_rdd.filter(match_movie)\nprint(movies_rdd.take(3))",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:22+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {
+          "0": {
+            "graph": {
+              "mode": "table",
+              "height": 90.275,
+              "optionOpen": false
+            }
+          }
+        },
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true,
+        "tableHide": false,
+        "editorHide": false
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "[(1, ('Toy Story', 1995, 'Adventure')), (1, ('Toy Story', 1995, 'Animation')), (1, ('Toy Story', 1995, 'Children'))]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=201",
+              "$$hashKey": "object:2847"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650903317953_1045063065",
+      "id": "paragraph_1650903317953_1045063065",
+      "dateCreated": "2022-04-25T16:15:17+0000",
+      "dateStarted": "2022-04-25T17:47:30+0000",
+      "dateFinished": "2022-04-25T17:47:30+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:532"
+    },
+    {
+      "title": "Normalize rating",
+      "text": "%pyspark\n\ndef get_rating_tuple(rating_line: str) -> tuple:\n    try:\n        _, movie_id, rating, _ = rating_line.split(',')\n        return int(movie_id), [float(rating), 1]\n    except Exception:\n        return ()\n        \n\npreprocessed_ratings_rdd = raw_ratings_rdd.map(get_rating_tuple)\nprint(preprocessed_ratings_rdd.take(3))",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:30+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "tableHide": false,
+        "editorHide": false,
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "[(1, [4.0, 1]), (3, [4.0, 1]), (6, [4.0, 1])]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=202",
+              "$$hashKey": "object:2897"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650903874798_1001351207",
+      "id": "paragraph_1650903874798_1001351207",
+      "dateCreated": "2022-04-25T16:24:34+0000",
+      "dateStarted": "2022-04-25T17:47:30+0000",
+      "dateFinished": "2022-04-25T17:47:30+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:533"
+    },
+    {
+      "title": "Combine rating",
+      "text": "%pyspark\n\ndef combine_rating(first_rating_tuple: tuple, second_rating_tuple: tuple) -> tuple:\n    first_rating, first_amount = first_rating_tuple\n    second_rating, second_amount = second_rating_tuple\n    return first_rating + second_rating, first_amount + second_amount\n    \n\ncombined_ratings_rdd = preprocessed_ratings_rdd.reduceByKey(combine_rating)\nprint(combined_ratings_rdd.take(3))",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:30+0000",
+      "config": {
+        "colWidth": 6,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "[(6, (402.5, 102)), (50, (864.5, 204)), (70, (193.0, 55))]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=203",
+              "$$hashKey": "object:2938"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650904151654_951506933",
+      "id": "paragraph_1650904151654_951506933",
+      "dateCreated": "2022-04-25T16:29:11+0000",
+      "dateStarted": "2022-04-25T17:47:31+0000",
+      "dateFinished": "2022-04-25T17:47:31+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:534"
+    },
+    {
+      "title": "Calculate averange rating",
+      "text": "%pyspark\n\ndef get_average_rating(rating_tuple: tuple) -> float:\n    rating, amount = rating_tuple\n    return round(rating / amount, 4)\n\n    \nratings_rdd = combined_ratings_rdd.mapValues(get_average_rating)\nprint(ratings_rdd.take(3))",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:31+0000",
+      "config": {
+        "colWidth": 6,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "[(6, 3.9461), (50, 4.2377), (70, 3.5091)]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=204",
+              "$$hashKey": "object:2974"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650904185118_56879842",
+      "id": "paragraph_1650904185118_56879842",
+      "dateCreated": "2022-04-25T16:29:45+0000",
+      "dateStarted": "2022-04-25T17:47:31+0000",
+      "dateFinished": "2022-04-25T17:47:31+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:535"
+    },
+    {
+      "title": "Join movies with averange rating",
+      "text": "%pyspark\n\n\ndef reorganize_tuple(joint_tuple: tuple) -> tuple:\n    movie_id, movie_rating_tuple = joint_tuple\n\n    movie_tuple, movie_rating = movie_rating_tuple\n    movie_title, movie_year, movie_genre = movie_tuple\n\n    return movie_genre, (movie_title, movie_year, movie_rating)\n    \n\npreprocessed_movies_ratings_rdd = movies_rdd.join(ratings_rdd).map(reorganize_tuple)\nprint(preprocessed_movies_ratings_rdd.take(3))",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:31+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "[('Comedy', ('Waiting to Exhale', 1995, 2.3571)), ('Drama', ('Waiting to Exhale', 1995, 2.3571)), ('Romance', ('Waiting to Exhale', 1995, 2.3571))]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=205",
+              "$$hashKey": "object:3069"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650904260475_331472113",
+      "id": "paragraph_1650904260475_331472113",
+      "dateCreated": "2022-04-25T16:31:00+0000",
+      "dateStarted": "2022-04-25T17:47:32+0000",
+      "dateFinished": "2022-04-25T17:47:32+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:536"
+    },
+    {
+      "title": "Group movies by genres and reduce top N values for each genre",
+      "text": "%pyspark\n\ndef get_top_n_values(movie_rating_tuples: list) -> list:\n    movie_rating_tuples.sort(key=lambda x: (-x[2], -x[1], x[0]))\n    return movie_rating_tuples[:args['N']] if args['N'] else movie_rating_tuples\n\ngrouped_movies_ratings_rdd = preprocessed_movies_ratings_rdd.groupByKey().sortByKey()\nmovies_ratings_rdd = grouped_movies_ratings_rdd.mapValues(lambda v: get_top_n_values(list(v)))\n\nfor group in movies_ratings_rdd.take(3):\n    print(group)",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:32+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "('Action', [('Tokyo Tribe', 2014, 5.0), (\"On the Other Side of the Tracks (De l'autre côté du périph)\", 2012, 5.0), ('Faster', 2010, 5.0)])\n('Adventure', [('Ice Age: The Great Egg-Scapade', 2016, 5.0), ('Delirium', 2014, 5.0), ('Dragons: Gift of the Night Fury', 2011, 5.0)])\n('Animation', [('Loving Vincent', 2017, 5.0), ('Ice Age: The Great Egg-Scapade', 2016, 5.0), ('Cosmic Scrat-tastrophe', 2015, 5.0)])\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=206",
+              "$$hashKey": "object:3094"
+            },
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=207",
+              "$$hashKey": "object:3095"
+            },
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=208",
+              "$$hashKey": "object:3096"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650904299748_594903718",
+      "id": "paragraph_1650904299748_594903718",
+      "dateCreated": "2022-04-25T16:31:39+0000",
+      "dateStarted": "2022-04-25T17:47:32+0000",
+      "dateFinished": "2022-04-25T17:47:33+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:537"
+    },
+    {
+      "title": "Convert to csv",
+      "text": "%pyspark\n\ndef get_csv_list(key_value_pair: tuple, separator: str = ',') -> list:\n    \n    def get_escaped_value(value: str, escape_char: str = '\"') -> str:\n        return value.center(len(value) + 2, escape_char) if separator in value else value\n\n    genre, movies = key_value_pair\n    return [f'{genre}{separator}{get_escaped_value(title)}{separator}{year}{separator}{rating}' for title, year, rating in movies]\n\n\ndef get_csv_rdd(movies_ratings_rdd: rdd, header: str) -> rdd:\n    csv_rdd = movies_ratings_rdd.flatMap(get_csv_list)\n    return sc.parallelize([header]).union(csv_rdd) if header else csv_rdd\n    \n\ncsv_rdd = get_csv_rdd(movies_ratings_rdd, 'genre,title,year,rating')\nprint(csv_rdd.take(3))",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:33+0000",
+      "config": {
+        "colWidth": 12,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "['genre,title,year,rating', 'Action,Tokyo Tribe,2014,5.0', \"Action,On the Other Side of the Tracks (De l'autre côté du périph),2012,5.0\"]\n"
+          }
+        ]
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=209",
+              "$$hashKey": "object:3149"
+            },
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=210",
+              "$$hashKey": "object:3150"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650905864268_1893323546",
+      "id": "paragraph_1650905864268_1893323546",
+      "dateCreated": "2022-04-25T16:57:44+0000",
+      "dateStarted": "2022-04-25T17:47:40+0000",
+      "dateFinished": "2022-04-25T17:47:40+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:538"
+    },
+    {
+      "title": "Save as file",
+      "text": "%pyspark\n\ncsv_rdd.saveAsTextFile(output_path)",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:44+0000",
+      "config": {
+        "colWidth": 4,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "python",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/python",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "results": {
+        "code": "SUCCESS",
+        "msg": []
+      },
+      "apps": [],
+      "runtimeInfos": {
+        "jobUrl": {
+          "propertyName": "jobUrl",
+          "label": "SPARK JOB",
+          "tooltip": "View in Spark web UI",
+          "group": "spark",
+          "values": [
+            {
+              "jobUrl": "http://hadoop-claster-m.europe-central2-b.c.arcane-storm-345519.internal:33603/jobs/job?id=211",
+              "$$hashKey": "object:3187"
+            }
+          ],
+          "interpreterSettingId": "spark"
+        }
+      },
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650906786640_1025182973",
+      "id": "paragraph_1650906786640_1025182973",
+      "dateCreated": "2022-04-25T17:13:06+0000",
+      "dateStarted": "2022-04-25T17:47:40+0000",
+      "dateFinished": "2022-04-25T17:47:41+0000",
+      "status": "FINISHED",
+      "$$hashKey": "object:539"
+    },
+    {
+      "text": "%sh\n\nhdfs dfs -ls /top-movies-spark-core/output",
+      "user": "anonymous",
+      "dateUpdated": "2022-04-25T17:47:52+0000",
+      "config": {
+        "colWidth": 8,
+        "fontSize": 9,
+        "enabled": true,
+        "results": {},
+        "editorSetting": {
+          "language": "text",
+          "editOnDblClick": false,
+          "completionKey": "TAB",
+          "completionSupport": true
+        },
+        "editorMode": "ace/mode/text",
+        "title": true
+      },
+      "settings": {
+        "params": {},
+        "forms": {}
+      },
+      "apps": [],
+      "runtimeInfos": {},
+      "progressUpdateIntervalMs": 500,
+      "jobName": "paragraph_1650908561601_2115713346",
+      "id": "paragraph_1650908561601_2115713346",
+      "dateCreated": "2022-04-25T17:42:41+0000",
+      "status": "FINISHED",
+      "focus": true,
+      "$$hashKey": "object:1722",
+      "dateFinished": "2022-04-25T17:47:44+0000",
+      "dateStarted": "2022-04-25T17:47:41+0000",
+      "title": "Output file partitions",
+      "results": {
+        "code": "SUCCESS",
+        "msg": [
+          {
+            "type": "TEXT",
+            "data": "Found 9 items\n-rw-r--r--   2 zeppelin hadoop          0 2022-04-25 17:47 /top-movies-spark-core/output/_SUCCESS\n-rw-r--r--   2 zeppelin hadoop          0 2022-04-25 17:47 /top-movies-spark-core/output/part-00000\n-rw-r--r--   2 zeppelin hadoop          0 2022-04-25 17:47 /top-movies-spark-core/output/part-00001\n-rw-r--r--   2 zeppelin hadoop          0 2022-04-25 17:47 /top-movies-spark-core/output/part-00002\n-rw-r--r--   2 zeppelin hadoop         24 2022-04-25 17:47 /top-movies-spark-core/output/part-00003\n-rw-r--r--   2 zeppelin hadoop        622 2022-04-25 17:47 /top-movies-spark-core/output/part-00004\n-rw-r--r--   2 zeppelin hadoop        497 2022-04-25 17:47 /top-movies-spark-core/output/part-00005\n-rw-r--r--   2 zeppelin hadoop        519 2022-04-25 17:47 /top-movies-spark-core/output/part-00006\n-rw-r--r--   2 zeppelin hadoop        427 2022-04-25 17:47 /top-movies-spark-core/output/part-00007\n"
+          }
+        ]
+      }
+    }
+  ],
+  "name": "top-movies-spark-core",
+  "id": "2H44AW5HR",
+  "defaultInterpreterGroup": "spark",
+  "version": "0.9.0-preview2",
+  "noteParams": {},
+  "noteForms": {},
+  "angularObjects": {},
+  "config": {
+    "isZeppelinNotebookCronEnable": false,
+    "looknfeel": "default",
+    "personalizedMode": "false"
+  },
+  "info": {
+    "isRunning": false
+  },
+  "path": "/top-movies-spark-core"
+}
